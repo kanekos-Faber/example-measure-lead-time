@@ -66,7 +66,7 @@ jobs:
       - name: Commit wiki pages
         working-directory: .wiki
         run: |
-          git add .wiki/pr_info.md
+          git add pr_info.md
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config user.name "github-actions[bot]"
           git commit -m "Update PR info wiki"
