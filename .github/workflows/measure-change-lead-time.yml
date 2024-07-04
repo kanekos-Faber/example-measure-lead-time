@@ -56,6 +56,8 @@ jobs:
             }
           ' | jq -r '.data.node | [.repository.name, .title, .author.login, .url, .baseRefName, .headRefName, .commits.nodes[0].commit.authoredDate, .createdAt, .reviews.nodes[0].createdAt, .mergedAt, .additions, .deletions]|@csv' |
           xargs -I{} echo PR_INFO={} >> $GITHUB_ENV
+      - name: checkout branch
+        uses: actions/checkout@v4
         with:
           repository: "${{ github.repository }}.wiki"
           path: .wiki
