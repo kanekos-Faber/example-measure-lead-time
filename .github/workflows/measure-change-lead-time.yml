@@ -56,6 +56,8 @@ jobs:
             }
           ' | jq -r '.data.node | [.repository.name, .title, .author.login, .url, .baseRefName, .headRefName, .commits.nodes[0].commit.authoredDate, .createdAt, .reviews.nodes[0].createdAt, .mergedAt, .additions, .deletions]|@csv' |
           xargs -I{} echo PR_INFO={} >> $GITHUB_ENV
+      - name: checkout wiki
+        uses: actions/checkout@v4
         with:
           repository: "${{ github.repository }}.wiki"
           path: .wiki
@@ -63,7 +65,6 @@ jobs:
         run: echo $PR_INFO >> .wiki/pr_info.md
       - name: Commit wiki pages
         working-directory: .wiki
-        if: steps.staging.outputs.NUM_OF_STAGED > 0
         run: |
           git add .wiki/change_lead_time.md
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
