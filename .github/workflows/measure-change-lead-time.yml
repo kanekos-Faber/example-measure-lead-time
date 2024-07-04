@@ -8,6 +8,7 @@ on:
 jobs:
   lead-time:
     if: github.event.pull_request.merged == true
+    permissions: write-all
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -16,13 +17,22 @@ jobs:
         uses: actions/checkout@v4
       - name: echo
         run: echo 'Hello world'
-      - name: calc time
+      - name: post github info
         run: |
           gh api graphql -f id="${{ github.event.pull_request.node_id }}" -f query='
             query ($id: ID!) {
               node(id: $id) {
                 ... on PullRequest {
-                  mergedAt
+                  repository {
+                    name
+                  }
+                  title
+                  author {
+                    login
+                  }
+                  url
+                  baseRefName
+                  headRefName
                   commits(first: 1) {
                     nodes {
                       commit {
@@ -30,15 +40,40 @@ jobs:
                       }
                     }
                   }
+                  createdAt
+                  mergedAt
+                  additions
+                  deletions
+                  reviews(first: 1) {
+                    nodes {
+                      ... on PullRequestReview {
+                        createdAt
+                      }
+                    }
+                  }
                 }
               }
             }
           ' |
-          jq -r '.data.node | .mergedAt, .commits.nodes[0].commit.authoredDate | fromdate | strftime("%s")' |
-          xargs -n 2 |
-          awk '{printf "%d", ($1 - $2) }'|
-          xargs -I{} echo LEAD_TIME_SECONDS={} >> $GITHUB_ENV
-      - name: comment
-        run: |
-          gh pr comment ${{ github.event.pull_request.html_url }} \
-          -b "@${{ github.event.pull_request.user.login }} お疲れ様でした!!🍺 リードタイムは$(expr ${LEAD_TIME_SECONDS} / 60 / 60 / 24)日 (${LEAD_TIME_SECONDS}秒)でした!!🎉"
+          # tokenで認証を行なっている
+          jq -r --arg token ${{ secrets.GAS_POST_API_METRIX_TOKEN }} '.data.node |
+            {
+              data: {
+                repository: .repository.name,
+                title: .title,
+                user: .author.login,
+                url: .url,
+                base: .baseRefName,
+                head: .headRefName,
+                firstCommittedAt: .commits.nodes[0].commit.authoredDate,
+                createdAt: .createdAt,
+                firstReviewedAt: .reviews.nodes[0].createdAt,
+                mergedAt: .mergedAt,
+                additions: .additions,
+                deletions: .deletions
+              },
+              type: "lead_time",
+              token: $token
+            } |
+            @json' |
+          curl -L -H "Content-Type: application/json" -d @- "https://script.googleapis.com/v1/scripts/AKfycbzmBYlRJFoxNT9ti2j__TdaHcvFdwPKpIxfAKx4GHwljW4JFRwCcg1GGWPqpGGfbHxj:exec"
