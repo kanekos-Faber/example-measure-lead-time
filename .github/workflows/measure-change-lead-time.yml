@@ -1,6 +1,8 @@
 name: 初回コミットからマージまでの時間を計測してコメント
 on:
-  pull_request
+  pull_request:
+    branches:
+    - develop
 
 jobs:
   lead-time:
