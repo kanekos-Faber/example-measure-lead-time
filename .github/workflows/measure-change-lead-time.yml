@@ -9,8 +9,36 @@ jobs:
   lead-time:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: checkout
         uses: actions/checkout@v4
       - name: echo
         run: echo 'Hello world'
+      - name: calc time
+        run: |
+          gh api graphql -f id="${{ github.event.pull_request.node_id }}" -f query='
+            query ($id: ID!) {
+              node(id: $id) {
+                ... on PullRequest {
+                  mergedAt
+                  commits(first: 1) {
+                    nodes {
+                      commit {
+                        authoredDate
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ' |
+          jq -r '.data.node | .mergedAt, .commits.nodes[0].commit.authoredDate | fromdate | strftime("%s")' |
+          xargs -n 2 |
+          awk '{printf "%d", ($1 - $2) }'|
+          xargs -I{} echo LEAD_TIME_SECONDS={} >> $GITHUB_ENV
+      - name: comment
+        run: |
+          gh pr comment ${{ github.event.pull_request.html_url }} \
+          -b "@${{ github.event.pull_request.user.login }} お疲れ様でした!!🍺 リードタイムは$(expr ${LEAD_TIME_SECONDS} / 60 / 60 / 24)日 (${LEAD_TIME_SECONDS}秒)でした!!🎉"
