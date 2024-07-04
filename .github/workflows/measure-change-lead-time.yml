@@ -2,7 +2,7 @@ name: 初回コミットからマージまでの時間を計測してコメン�
 on:
   pull_request:
     branches:
-      - feature- # baseブランチの指定
+      - feature-*
     types: [closed]
 
 jobs:
