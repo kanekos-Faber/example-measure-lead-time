@@ -61,9 +61,9 @@ jobs:
       - name: Update wiki pages
         run: |
           if [ ! -e .wiki/pr_info.md ]; then
-            printf "repository,title,user,url,base,head,firstCommittedAt,createdAt,firstReviewedAt,mergedAt,additions,deletions\n" > .wiki/pr_info.md
+            echo -e "repository,title,user,url,base,head,firstCommittedAt,createdAt,firstReviewedAt,mergedAt,additions,deletions\n" > .wiki/pr_info.md
           fi
-          printf $PR_INFO >> .wiki/pr_info.md
+          echo -e $PR_INFO . '\n' >> .wiki/pr_info.md
       - name: Commit wiki pages
         working-directory: .wiki
         run: |
