@@ -1,4 +1,4 @@
-name: 初回コミットからマージまでの時間を計測してコメント
+name: Record merged PR information
 on:
   pull_request:
     types: [closed]
@@ -63,7 +63,7 @@ jobs:
           if [ ! -e .wiki/pr_info.md ]; then
             echo -e "repository,title,user,url,base,head,firstCommittedAt,createdAt,firstReviewedAt,mergedAt,additions,deletions\n" > .wiki/pr_info.md
           fi
-          echo -e $PR_INFO . '\n' >> .wiki/pr_info.md
+          echo -e $PR_INFO\n >> .wiki/pr_info.md
       - name: Commit wiki pages
         working-directory: .wiki
         run: |
